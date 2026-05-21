@@ -1,0 +1,18 @@
+{
+  "name": "fun-20260521-hue-chain",
+  "version": "1.0.0",
+  "description": "A tiny browser game about chaining color chips to match a target hue.",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 5175",
+    "test": "node test/game.test.mjs"
+  },
+  "keywords": [
+    "browser-game",
+    "color-game",
+    "puzzle",
+    "static-web"
+  ],
+  "author": "batuer",
+  "license": "MIT"
+}

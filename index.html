@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Hue Chain Rally is a tiny color-chain browser game.">
+    <title>Hue Chain Rally</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell" data-app>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Daily color chain</p>
+          <h1>Hue Chain Rally</h1>
+          <p class="lede">Match the target by chaining neighboring color chips into one blended guess.</p>
+        </div>
+        <div class="scorebox" aria-label="Game status">
+          <span data-round>Ready</span>
+          <strong data-score>0 pts</strong>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="Game controls">
+        <button type="button" data-action="start">Start rally</button>
+        <button class="secondary" type="button" data-action="reset">Clear chain</button>
+        <button class="secondary" type="button" data-action="copy" disabled>Copy result</button>
+        <label class="toggle">
+          <input type="checkbox" data-labels>
+          <span>Show chip codes</span>
+        </label>
+      </section>
+
+      <section class="target-strip" data-target aria-live="polite"></section>
+
+      <section class="game-layout">
+        <div class="board-panel">
+          <div class="board" data-board aria-label="Color chip board"></div>
+        </div>
+
+        <aside class="side-panel">
+          <div>
+            <p class="eyebrow">Today seed</p>
+            <strong data-seed></strong>
+          </div>
+          <p class="prompt" data-prompt></p>
+          <div data-chain></div>
+          <div class="feedback" data-feedback aria-live="polite"></div>
+          <ol class="rules">
+            <li>Start the rally.</li>
+            <li>Pick 3-5 touching chips.</li>
+            <li>Submit the blend, then chase a better score next round.</li>
+          </ol>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
