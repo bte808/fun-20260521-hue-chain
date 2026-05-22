@@ -57,6 +57,42 @@ function totalScore() {
   return state.results.reduce((sum, result) => sum + result.score, 0);
 }
 
+function isFinished() {
+  return state.results.length === state.game.rounds.length;
+}
+
+function hasDirectFeedback() {
+  return state.feedback === 'Result copied.' || state.feedback.startsWith('Hue Chain Rally ');
+}
+
+function isCopyFallback() {
+  return state.feedback.startsWith('Hue Chain Rally ');
+}
+
+function renderAnswerReveal(result) {
+  const chips = result.recipeSwatches
+    .map((swatch, position) => `
+      <span
+        class="mini-chip"
+        style="--chip: ${swatch.hex}; --chip-text: ${swatch.text}"
+        title="Chip ${swatch.index + 1}, ${swatch.hex}"
+      >
+        ${position + 1}
+      </span>
+    `)
+    .join('');
+
+  return `
+    <div class="answer-reveal" aria-label="Hidden target chain">
+      <span class="answer-title">Hidden chain</span>
+      <div class="answer-row">
+        <div class="chain-list answer-chips">${chips}</div>
+        <span class="answer-code">${result.recipe.map((index) => index + 1).join(' -> ')}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderTarget() {
   const round = currentRound();
   const blend = blendPreview();
@@ -112,6 +148,7 @@ function renderBoard() {
 
 function renderChain() {
   const round = currentRound();
+  const finished = isFinished();
   const chips = state.selected
     .map((index, position) => {
       const color = round.board[index];
@@ -131,20 +168,27 @@ function renderChain() {
     <div class="chain-actions">
       <button class="secondary" type="button" data-action="clear" ${!state.started || state.locked || state.selected.length === 0 ? 'disabled' : ''}>Clear</button>
       <button type="button" data-action="submit" ${canSubmit ? '' : 'disabled'}>Submit mix</button>
-      ${state.locked ? '<button type="button" data-action="next">Next</button>' : ''}
+      ${state.locked && !finished ? '<button type="button" data-action="next">Next</button>' : ''}
     </div>
   `;
 }
 
 function renderFeedback() {
-  const finished = state.results.length === state.game.rounds.length;
+  const finished = isFinished();
   const last = state.results[state.results.length - 1];
-  const detail = state.locked && last
-    ? `${last.rating}: ${last.accuracy}% match, +${last.score} points.`
-    : state.feedback;
+  let detail = state.feedback;
+  if (state.locked && last && !hasDirectFeedback()) {
+    detail = finished
+      ? `Rally complete: ${last.rating}, ${last.accuracy}% match, +${last.score} points.`
+      : `${last.rating}: ${last.accuracy}% match, +${last.score} points.`;
+  }
+  const detailMarkup = isCopyFallback()
+    ? `<pre class="copy-fallback">${detail}</pre>`
+    : `<p>${detail}</p>`;
 
   elements.feedback.innerHTML = `
-    <p>${detail}</p>
+    ${detailMarkup}
+    ${state.locked && last ? renderAnswerReveal(last) : ''}
     ${finished ? `<strong>Final score: ${totalScore()} / 999</strong>` : ''}
   `;
 }
@@ -219,7 +263,8 @@ function selectChip(index) {
 }
 
 function submitChain() {
-  const result = scoreChain(currentRound(), state.selected);
+  const round = currentRound();
+  const result = scoreChain(round, state.selected);
   if (!result.valid) {
     state.feedback = result.reason;
     renderFeedback();
@@ -229,7 +274,16 @@ function submitChain() {
   state.results.push({
     ...result,
     chain: [...state.selected],
-    roundName: currentRound().name
+    roundName: round.name,
+    recipe: [...round.recipe],
+    recipeSwatches: round.recipe.map((index) => {
+      const color = round.board[index];
+      return {
+        index,
+        hex: rgbToHex(color),
+        text: readableColor(color)
+      };
+    })
   });
   state.locked = true;
   state.feedback = result.rating;
@@ -258,7 +312,10 @@ async function copyResult() {
   const lines = [
     `Hue Chain Rally ${state.seed}`,
     `Score: ${totalScore()} / 999`,
-    ...state.results.map((result, index) => `R${index + 1}: ${result.accuracy}% ${result.rating}`)
+    ...state.results.map((result, index) => {
+      const answer = result.recipe.map((chip) => chip + 1).join('-');
+      return `R${index + 1}: ${result.accuracy}% ${result.rating} (answer ${answer})`;
+    })
   ];
   const text = lines.join('\n');
 

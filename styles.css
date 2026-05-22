@@ -294,6 +294,47 @@ h1 {
   line-height: 1.4;
 }
 
+.copy-fallback {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+  color: var(--ink);
+  font: 0.9rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.answer-reveal {
+  margin: 10px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.answer-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.answer-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.answer-chips {
+  min-height: 40px;
+}
+
+.answer-code {
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 800;
+}
+
 .rules {
   margin: 0;
   padding-left: 22px;

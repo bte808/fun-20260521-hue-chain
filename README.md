@@ -7,8 +7,9 @@ Hue Chain Rally is a tiny static browser game where you match a target color by 
 - Starts instantly in the browser with no login, API key, or build step.
 - Generates a deterministic daily board from the Asia/Shanghai date.
 - Lets players pick connected color chains, preview the blended color, submit a score, and move through three rounds.
+- Reveals the hidden target chain after each submitted round so players can learn from the miss.
 - Supports a chip-code toggle for players who want more exact color clues.
-- Produces a copyable final result for sharing.
+- Produces a copyable final result with per-round accuracy and answer paths for sharing, with a readable text fallback if the browser blocks clipboard access.
 
 ## Why it is useful
 
@@ -16,7 +17,7 @@ It is a quick color-sense warmup. Designers can use it as a playful hue-matching
 
 ## Why it is fun
 
-The board always hides a perfect chain, but the player only sees the colors. That makes each round a small visual deduction puzzle: do you trust your eyes, add one more chip, or submit before over-mixing?
+The board always hides a perfect chain, but the player only sees the colors until submitting. That makes each round a small visual deduction puzzle: do you trust your eyes, add one more chip, or submit before over-mixing? The post-round reveal turns near misses into a quick "oh, that was the blend" moment.
 
 ## Inspiration
 
@@ -53,7 +54,8 @@ node --check src/game.js
 1. Press **Start rally**.
 2. Pick 3-5 adjacent chips on the board.
 3. Watch the live blend preview and submit when it feels close.
-4. Play three rounds and copy the final score.
+4. Compare your guess with the hidden chain reveal.
+5. Play three rounds and copy the final score.
 
 ## Future extensions
 
