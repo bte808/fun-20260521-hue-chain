@@ -114,6 +114,11 @@ h1 {
   font-size: 1.7rem;
 }
 
+.best-score {
+  margin-top: 6px;
+  font-weight: 800;
+}
+
 .toolbar,
 .target-strip,
 .side-panel,

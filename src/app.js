@@ -22,17 +22,46 @@ const elements = {
   feedback: document.querySelector('[data-feedback]'),
   round: document.querySelector('[data-round]'),
   score: document.querySelector('[data-score]'),
+  best: document.querySelector('[data-best]'),
   seed: document.querySelector('[data-seed]')
 };
 
+const initialSeed = shanghaiDateKey();
+const BEST_SCORE_KEY_PREFIX = 'hue-chain-rally:best:';
+
+function bestScoreKey(seed) {
+  return `${BEST_SCORE_KEY_PREFIX}${seed}`;
+}
+
+function readBestScore(seed) {
+  try {
+    const value = window.localStorage.getItem(bestScoreKey(seed));
+    const score = Number.parseInt(value ?? '', 10);
+    return Number.isInteger(score) && score >= 0 ? score : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeBestScore(seed, score) {
+  try {
+    window.localStorage.setItem(bestScoreKey(seed), String(score));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const state = {
-  seed: shanghaiDateKey(),
+  seed: initialSeed,
   game: null,
   started: false,
   roundIndex: 0,
   selected: [],
   results: [],
   feedback: 'Start the rally, then pick 3-5 neighboring chips.',
+  bestScore: readBestScore(initialSeed),
+  bestStatus: '',
   showLabels: false,
   locked: false
 };
@@ -67,6 +96,28 @@ function hasDirectFeedback() {
 
 function isCopyFallback() {
   return state.feedback.startsWith('Hue Chain Rally ');
+}
+
+function updateBestScore() {
+  const score = totalScore();
+  const previous = state.bestScore;
+
+  if (previous === null || score > previous) {
+    const saved = writeBestScore(state.seed, score);
+    state.bestScore = score;
+    state.bestStatus = previous === null
+      ? 'First local best for today.'
+      : `New local best by ${score - previous} points.`;
+
+    if (!saved) {
+      state.bestStatus += ' Storage is blocked, so it will reset after refresh.';
+    }
+    return;
+  }
+
+  state.bestStatus = score === previous
+    ? "Matched today's local best."
+    : `${previous - score} points short of today's local best.`;
 }
 
 function renderAnswerReveal(result) {
@@ -178,9 +229,10 @@ function renderFeedback() {
   const last = state.results[state.results.length - 1];
   let detail = state.feedback;
   if (state.locked && last && !hasDirectFeedback()) {
-    detail = finished
+    const roundSummary = finished
       ? `Rally complete: ${last.rating}, ${last.accuracy}% match, +${last.score} points.`
       : `${last.rating}: ${last.accuracy}% match, +${last.score} points.`;
+    detail = finished && state.bestStatus ? `${roundSummary} ${state.bestStatus}` : roundSummary;
   }
   const detailMarkup = isCopyFallback()
     ? `<pre class="copy-fallback">${detail}</pre>`
@@ -198,6 +250,7 @@ function renderMeta() {
   const roundLabel = state.started ? `Round ${state.roundIndex + 1} of ${state.game.rounds.length}` : 'Ready';
   elements.round.textContent = `${roundLabel} - ${round.name}`;
   elements.score.textContent = `${totalScore()} pts`;
+  elements.best.textContent = `Best today: ${state.bestScore === null ? 'none yet' : `${state.bestScore} pts`}`;
   elements.seed.textContent = state.seed;
   elements.app.querySelector('[data-prompt]').textContent = round.prompt;
   elements.start.textContent = state.started ? 'Restart' : 'Start rally';
@@ -219,6 +272,8 @@ function startGame() {
   state.selected = [];
   state.results = [];
   state.feedback = `Pick ${CHAIN_MIN}-${CHAIN_MAX} neighboring chips, then submit your mix.`;
+  state.bestScore = readBestScore(state.seed);
+  state.bestStatus = '';
   state.locked = false;
   render();
 }
@@ -287,6 +342,9 @@ function submitChain() {
   });
   state.locked = true;
   state.feedback = result.rating;
+  if (isFinished()) {
+    updateBestScore();
+  }
   render();
 }
 
@@ -312,6 +370,7 @@ async function copyResult() {
   const lines = [
     `Hue Chain Rally ${state.seed}`,
     `Score: ${totalScore()} / 999`,
+    `Best today: ${state.bestScore === null ? totalScore() : state.bestScore} / 999`,
     ...state.results.map((result, index) => {
       const answer = result.recipe.map((chip) => chip + 1).join('-');
       return `R${index + 1}: ${result.accuracy}% ${result.rating} (answer ${answer})`;
